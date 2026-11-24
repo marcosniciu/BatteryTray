@@ -103,9 +103,42 @@ internal static class HidPaths
         return list;
     }
 
+    // Para o diagnóstico: um item por aparelho (VID:PID), com fabricante e nome que ele informa.
+    public static List<string> Describe()
+    {
+        var seen = new SortedDictionary<string, string>();
+        foreach (var path in Find("hid#"))
+        {
+            var m = System.Text.RegularExpressions.Regex.Match(path, @"vid_([0-9a-f]{4})&pid_([0-9a-f]{4})", System.Text.RegularExpressions.RegexOptions.IgnoreCase);
+            if (!m.Success) continue;
+            string key = $"{m.Groups[1].Value.ToUpperInvariant()}:{m.Groups[2].Value.ToUpperInvariant()}";
+            if (seen.TryGetValue(key, out var have) && have.Length > 0) continue;
+            string name = "";
+            IntPtr h = CreateFileW(path, 0, 3, IntPtr.Zero, 3, 0, IntPtr.Zero);
+            if (h != new IntPtr(-1))
+            {
+                var b = new byte[256];
+                string maker = HidD_GetManufacturerString(h, b, b.Length) ? Clean(b) : "";
+                Array.Clear(b);
+                string prod = HidD_GetProductString(h, b, b.Length) ? Clean(b) : "";
+                name = $"{maker} {prod}".Trim();
+                CloseHandle(h);
+            }
+            seen[key] = name;
+        }
+        return seen.Select(kv => $"  {kv.Key} {kv.Value}").ToList();
+    }
+
+    private static string Clean(byte[] b) => System.Text.Encoding.Unicode.GetString(b).Split('\0')[0].Trim();
+
     [StructLayout(LayoutKind.Sequential)]
     private struct SP_DEVICE_INTERFACE_DATA { public int cbSize; public Guid InterfaceClassGuid; public int Flags; public IntPtr Reserved; }
 
+    [DllImport("hid.dll")] private static extern bool HidD_GetManufacturerString(IntPtr h, byte[] b, int len);
+    [DllImport("hid.dll")] private static extern bool HidD_GetProductString(IntPtr h, byte[] b, int len);
+    [DllImport("kernel32.dll", SetLastError = true, CharSet = CharSet.Unicode)]
+    private static extern IntPtr CreateFileW(string name, uint access, uint share, IntPtr sec, uint disp, uint flags, IntPtr tmpl);
+    [DllImport("kernel32.dll")] private static extern bool CloseHandle(IntPtr h);
     [DllImport("hid.dll")] private static extern void HidD_GetHidGuid(out Guid g);
     [DllImport("setupapi.dll", SetLastError = true)] private static extern IntPtr SetupDiGetClassDevsW(ref Guid g, IntPtr e, IntPtr p, uint flags);
     [DllImport("setupapi.dll", SetLastError = true)] private static extern bool SetupDiEnumDeviceInterfaces(IntPtr info, IntPtr dev, ref Guid g, uint idx, ref SP_DEVICE_INTERFACE_DATA d);

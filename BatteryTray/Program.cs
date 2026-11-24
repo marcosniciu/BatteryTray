@@ -43,6 +43,9 @@ internal static class Program
                 lines.Add(raw.Count > 0 ? "Relatórios recebidos do JBL (20 s):" : "Nenhum relatório recebido do JBL em 20 s");
                 lines.AddRange(raw);
             }
+            lines.Add("");
+            lines.Add("Aparelhos USB/HID conectados (VID:PID fabricante modelo):");
+            lines.AddRange(HidPaths.Describe());
             File.WriteAllLines(Path.Combine(AppContext.BaseDirectory, "batterytray-dump.txt"), lines);
             return;
         }

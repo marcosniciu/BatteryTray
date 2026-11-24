@@ -12,7 +12,7 @@ Mostra a bateria dos aparelhos sem fio numa faixa da barra de tarefas do Windows
 |---|---|
 | Redragon M719 Invader Pro (receptor 25A7:FA7E) | Protocolo HID do software oficial: consulta `08 04`, nível 0..10 no byte 6, byte 7 = carregando |
 | HyperX Cloud Stinger Core Wireless (03F0:0A93) | Feature report FF, tensão em mV convertida para % |
-| JBL Quantum 910 (receptor 0ECB:2088) | Escuta o input report `08` que o fone envia (não testado) |
+| JBL Quantum 910 (receptor 0ECB:2088) | Feature report `0x49` (bateria) e `0x68` (ligado); também ouve o `08` que o fone envia. Confirmado: 95% |
 | Controles Bluetooth e outros | Bateria que o próprio Windows informa (`DEVPKEY_Device_BatteryLevel`) |
 
 O app só envia consultas de leitura; nenhuma configuração é gravada nos aparelhos.
