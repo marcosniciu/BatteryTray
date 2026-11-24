@@ -1,5 +1,9 @@
 # BatteryTray
 
+> [!IMPORTANT]
+> **Nova versão:** este app foi substituído pelo **[BatteryHub (fork)](https://github.com/marcosniciu/Wireless-Device-Battery-Monitor)**, que tem os ~40 drivers do BatteryHub original mais o Redragon M719 e o JBL Quantum 910 feitos aqui, cartão com gráfico de 24 h e atualização automática.
+> **[Baixar o instalador do BatteryHub](https://github.com/marcosniciu/Wireless-Device-Battery-Monitor/releases/latest)**. Este repositório fica como referência dos protocolos descobertos.
+
 Mostra a bateria dos aparelhos sem fio numa faixa da barra de tarefas do Windows, ao lado da área de notificação (um ícone do aparelho + porcentagem, com raio azul quando está carregando).
 
 ![BatteryTray na barra de tarefas: mouse 30% carregando e fone 59%](docs/barra-de-tarefas.png)
