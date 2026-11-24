@@ -2,6 +2,10 @@
 
 Mostra a bateria dos aparelhos sem fio numa faixa da barra de tarefas do Windows, ao lado da área de notificação (um ícone do aparelho + porcentagem, com raio azul quando está carregando).
 
+![BatteryTray na barra de tarefas: mouse 30% carregando e fone 59%](docs/barra-de-tarefas.png)
+
+**[Baixar o BatteryTray.exe](https://github.com/marcosniciu/BatteryTray/releases/latest)**: um arquivo só, não precisa instalar nada.
+
 ## Aparelhos suportados
 
 | Aparelho | Como lê |
