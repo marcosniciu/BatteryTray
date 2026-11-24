@@ -16,7 +16,7 @@ O app só envia consultas de leitura; nenhuma configuração é gravada nos apar
 ## Uso
 
 - Clique direito na faixa: lista os aparelhos, "Iniciar com o Windows", "Atualizar agora", "Sair".
-- `BatteryTray.exe --dump`: grava `batterytray-dump.txt` ao lado do .exe (diagnóstico).
+- Menu "Gerar diagnóstico" (ou `BatteryTray.exe --dump`): escuta 20 s, grava `batterytray-dump.txt` ao lado do .exe (diagnóstico).
 - `BatteryTray.exe --startup on|off`: liga/desliga o início com o Windows.
 
 ## Compilar

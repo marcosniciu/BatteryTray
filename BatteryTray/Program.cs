@@ -108,6 +108,7 @@ internal sealed class TrayApp : ApplicationContext
         try
         {
             var devices = await Task.Run(ReadBatteries);
+            _last = devices;
             BuildMenu(devices);
             _strip.SetItems(devices);
         }
@@ -128,9 +129,39 @@ internal sealed class TrayApp : ApplicationContext
         var refresh = new ToolStripMenuItem("Atualizar agora");
         refresh.Click += (_, _) => Refresh();
         _menu.Items.Add(refresh);
+        var diag = new ToolStripMenuItem(_diagnosing ? "Gerando diagnóstico (20 s)..." : "Gerar diagnóstico") { Enabled = !_diagnosing };
+        diag.Click += (_, _) => RunDiagnostic();
+        _menu.Items.Add(diag);
         var exit = new ToolStripMenuItem("Sair");
         exit.Click += (_, _) => ExitThread();
         _menu.Items.Add(exit);
+    }
+
+    // Roda este mesmo .exe com --dump e abre o arquivo gerado no Bloco de Notas.
+    private bool _diagnosing;
+    private List<DeviceBattery> _last = new();
+
+    private async void RunDiagnostic()
+    {
+        if (_diagnosing || Environment.ProcessPath is not string exe) return;
+        _diagnosing = true;
+        BuildMenu(_last);
+        try
+        {
+            string file = Path.Combine(AppContext.BaseDirectory, "batterytray-dump.txt");
+            await Task.Run(() =>
+            {
+                using var p = Process.Start(new ProcessStartInfo(exe, "--dump") { UseShellExecute = false, CreateNoWindow = true });
+                p?.WaitForExit(60_000);
+            });
+            if (File.Exists(file)) Process.Start(new ProcessStartInfo("notepad.exe", $"\"{file}\"") { UseShellExecute = true });
+        }
+        catch (Exception ex) { Debug.WriteLine(ex); }
+        finally
+        {
+            _diagnosing = false;
+            BuildMenu(_last);
+        }
     }
 
     internal static List<DeviceBattery> ReadBatteries()
