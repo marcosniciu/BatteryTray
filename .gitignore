@@ -1,0 +1,8 @@
+bin/
+obj/
+dist/
+out/
+*.user
+.vs/
+batterytray-dump.txt
+strip-debug.*
