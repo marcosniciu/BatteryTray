@@ -23,10 +23,12 @@ internal static class Program
         if (args.Contains("--dump"))
         {
             var devices = TrayApp.ReadBatteries();
-            // O JBL envia a bateria quando quer: espera até 8 s por ele, se o receptor estiver conectado.
-            if (HidPaths.Find("vid_0ecb&pid_2088").Count > 0 && !devices.Any(d => d.Name.StartsWith("JBL")))
+            // O JBL envia a bateria quando quer: escuta 20 s para registrar o que o receptor manda.
+            bool hasJbl = HidPaths.Find("vid_0ecb&pid_2088").Count > 0;
+            if (hasJbl)
             {
-                for (int i = 0; i < 16 && JblQuantum910.TryRead() is null; i++) Thread.Sleep(500);
+                Thread.Sleep(20_000);
+                devices.RemoveAll(d => d.Name.StartsWith("JBL"));
                 var jbl = JblQuantum910.TryRead();
                 if (jbl is not null) devices.Add(jbl);
             }
@@ -34,6 +36,13 @@ internal static class Program
             if (lines.Count == 0) lines.Add("Nenhum dispositivo com bateria");
             var diag = JblQuantum910.Diagnose();
             if (diag.Count > 0) { lines.Add(""); lines.Add("Receptor JBL encontrado:"); lines.AddRange(diag); }
+            if (hasJbl)
+            {
+                var raw = JblQuantum910.RawReports();
+                lines.Add("");
+                lines.Add(raw.Count > 0 ? "Relatórios recebidos do JBL (20 s):" : "Nenhum relatório recebido do JBL em 20 s");
+                lines.AddRange(raw);
+            }
             File.WriteAllLines(Path.Combine(AppContext.BaseDirectory, "batterytray-dump.txt"), lines);
             return;
         }

@@ -84,9 +84,10 @@ internal static class JblQuantum910
             if (page < 0xFF00 || inLen < 2) return; // só coleções de fornecedor com relatório de entrada
 
             // Tenta ler o último relatório 0x08 na hora, sem esperar o fone enviar (pode não ser suportado).
+            string tag = $"{Tag(path)} page={page:X4}";
             var now = new byte[inLen];
             now[0] = 0x08;
-            if (HidD_GetInputReport(h, now, inLen)) Accept(now);
+            if (HidD_GetInputReport(h, now, inLen)) { Log(tag + " get", now); Accept(now); }
 
             using var fs = new FileStream(h, FileAccess.Read, inLen, false);
             var buf = new byte[inLen];
@@ -94,6 +95,7 @@ internal static class JblQuantum910
             {
                 int n = fs.Read(buf, 0, inLen);
                 if (n <= 0) break;
+                Log(tag + " read", buf);
                 Accept(buf);
             }
         }
@@ -107,10 +109,39 @@ internal static class JblQuantum910
         }
     }
 
+    // 0 é ignorado: um relatório 08 zerado (ex.: GetInputReport sem dado guardado) não é bateria real,
+    // e com 0% o fone já estaria desligado.
     private static void Accept(byte[] r)
     {
-        if (r.Length >= 2 && r[0] == 0x08 && r[1] <= 100)
+        if (r.Length >= 2 && r[0] == 0x08 && r[1] >= 1 && r[1] <= 100)
             lock (Gate) _level = r[1];
+    }
+
+    // Últimos relatórios brutos recebidos, para o --dump (ajuda a descobrir o formato no PC com o fone).
+    private static readonly Queue<string> Raw = new();
+
+    private static void Log(string tag, byte[] r)
+    {
+        int len = r.Length;
+        while (len > 1 && r[len - 1] == 0) len--;
+        string line = $"  {DateTime.Now:HH:mm:ss} {tag}: {BitConverter.ToString(r, 0, Math.Max(len, 2))}";
+        lock (Gate)
+        {
+            Raw.Enqueue(line);
+            while (Raw.Count > 40) Raw.Dequeue();
+        }
+    }
+
+    public static List<string> RawReports()
+    {
+        lock (Gate) return Raw.ToList();
+    }
+
+    private static string Tag(string path)
+    {
+        int i = path.IndexOf("mi_", StringComparison.OrdinalIgnoreCase);
+        int j = path.IndexOf('#', Math.Max(i, 0) + 1);
+        return i >= 0 && j > i ? path[i..j] : "";
     }
 
     [DllImport("kernel32.dll", SetLastError = true, CharSet = CharSet.Unicode)]
